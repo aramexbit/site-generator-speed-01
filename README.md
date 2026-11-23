@@ -8,14 +8,14 @@ A faster drop-in replacement for make.fun's own `makefun-site` 1.0.0 static site
 
 ## How it is fast
 
-- **One pass per case.** Sources are parsed once; the template for each layout is compiled once into an operation tree and then interpreted per page.
-- **Markdown without regex in the hot path.** Block dispatch on the first character, inline scanning with `indexOf`, and HTML escaping done once per text run.
+- **One pass per case.** Sources are parsed once; each template is compiled once into a JavaScript function (via `new Function`) that writes straight into the output array — no tree is interpreted per page. Values no loop can shadow read directly from the values object; loop variables and `loop` become plain JS locals.
+- **Markdown without regex in the hot path.** Block dispatch on the first character, inline scanning that jumps from one special character to the next with `indexOf`, and HTML escaping by one manual pass that returns the input untouched when it holds no special character.
 - **Cached work.** Slugification, long dates (`9 November 2026`) and word counts are computed once per source and reused across the index, tag pages, cards and table of contents.
-- **Minimal allocation.** Strings are built with arrays and `join`; no intermediate objects per line.
+- **Minimal allocation.** Strings are built with arrays and `join`; the inline and template scratch arrays are reused across calls instead of allocated per paragraph or page; no intermediate objects per line.
 
 ## Measured speed
 
-On the competition's practice set (3 cases, 200–600 sources each), this entry is byte-identical to `makefun-site` 1.0.0 on all 3 cases, and its `run()` uses **~2.9× less CPU** than the house baseline measured side by side on the same machine (241,000 µs vs 706,000 µs total over the 3 cases). `grade-local` reproduces the 3/3 result byte for byte.
+On the competition's practice set (3 cases, 200–600 sources each), this entry is byte-identical to `makefun-site` 1.0.0 on all 3 cases, and its `run()` uses **~3.4× less CPU** than the house baseline measured side by side on the same machine (169,000 µs vs 576,000 µs total over the 3 cases) — about 24% less than the previous entry (223,000 µs). `grade-local` reproduces the 3/3 result byte for byte.
 
 ## Run it
 
